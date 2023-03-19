@@ -1,23 +1,29 @@
-import json
+import gspread
+from google.oauth2.service_account import Credentials
+
+SCOPE = ["https://www.googleapis.com/auth/spreadsheets","https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+CREDS = Credentials.from_service_account_file('creds.json')
+SCOPED_CREDS = CREDS.with_scopes(SCOPE)
+CLIENT = gspread.authorize(SCOPED_CREDS)
+SHEET = CLIENT.open('movies')
+MOVIE_DATA = SHEET.worksheet('movie_data')
 
 def load_movies():
-    try:
-        with open('movies.json', 'r') as f:
-            movies = json.load(f)
-    except FileNotFoundError:
-        movies = []
+    movies = MOVIE_DATA.get_all_records()
     return movies
 
 def save_movies(movies):
-    with open('movies.json', 'w') as f:
-        json.dump(movies, f)
+    MOVIE_DATA.clear()
+    MOVIE_DATA.insert_row(['Title', 'Director', 'Year'], 1)
+    for movie in movies:
+        MOVIE_DATA.insert_row([movie['Title'], movie['Director'], movie['Year']], 2)
 
 def add_movie():
     title = input("Enter the title of the movie: ")
     director = input("Enter the director of the movie: ")
     year = input("Enter the year of the movie: ")
     movies = load_movies()
-    movie = {'title': title, 'director': director, 'year': year}
+    movie = {'Title': title, 'Director': director, 'Year': year}
     movies.append(movie)
     save_movies(movies)
     print(f"Added movie: {title}")
@@ -28,7 +34,7 @@ def view_movies():
         print("No movies found.")
     else:
         for movie in movies:
-            print(f"{movie['title']} ({movie['year']}) - directed by {movie['director']}")
+            print(f"{movie['Title']} ({movie['Year']}) - directed by {movie['Director']}")
 
 def search_movie():
     title = input("Enter the title of the movie to search: ")
@@ -38,12 +44,12 @@ def search_movie():
         print(f"No movie with title '{title}' found.")
     else:
         for movie in found_movies:
-            print(f"{movie['title']} ({movie['year']}) - directed by {movie['director']}")
+            print(f"{movie['Title']} ({movie['Year']}) - directed by {movie['Director']}")
 
 def delete_movie():
     title = input("Enter the title of the movie to delete: ")
     movies = load_movies()
-    updated_movies = [movie for movie in movies if title.lower() not in movie['title'].lower()]
+    updated_movies = [movie for movie in movies if title.lower() not in movie['Title'].lower()]
     if len(updated_movies) == len(movies):
         print(f"No movie with title '{title}' found.")
     else:
