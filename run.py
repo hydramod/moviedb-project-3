@@ -39,7 +39,7 @@ def view_movies():
 def search_movie():
     title = input("Enter the title of the movie to search: ")
     movies = load_movies()
-    found_movies = [movie for movie in movies if title.lower() in movie['title'].lower()]
+    found_movies = [movie for movie in movies if title.lower() in movie['Title'].lower()]
     if len(found_movies) == 0:
         print(f"No movie with title '{title}' found.")
     else:
